@@ -36,6 +36,11 @@ public static partial class NopCatalogDefaults
     /// </summary>
     public static string ProductAttributePrefix => "product_attribute_";
 
+    /// <summary>
+    /// Gets a name of generic attribute to store the product preview token
+    /// </summary>
+    public static string ProductPreviewTokenAttribute => "ProductPreviewToken";
+
     #endregion
 
     #region Caching defaults
@@ -165,7 +170,7 @@ public static partial class NopCatalogDefaults
     /// Gets a key pattern to clear cache
     /// </summary>
     public static string ProductCategoriesByProductWithoutIdPrefix => "Nop.productcategory.byproduct.";
-    
+
     /// <summary>
     /// Key for caching
     /// </summary>

@@ -100,7 +100,7 @@ public partial class ProductController : BaseAdminController
     protected readonly IWarehouseService _warehouseService;
     protected readonly IWebHelper _webHelper;
     protected readonly IWorkContext _workContext;
-    protected readonly IGenericAttributeService _genericAttributeService
+    protected readonly IGenericAttributeService _genericAttributeService;
     protected readonly CurrencySettings _currencySettings;
     protected readonly LocalizationSettings _localizationSettings;
     protected readonly MediaSettings _mediaSettings;
