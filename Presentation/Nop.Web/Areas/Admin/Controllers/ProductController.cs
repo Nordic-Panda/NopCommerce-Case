@@ -1888,6 +1888,35 @@ public partial class ProductController : BaseAdminController
         return View(new AddCrossSellProductSearchModel());
     }
 
+    [HttpPost]
+    [CheckPermission(StandardPermission.Catalog.PRODUCTS_CREATE_EDIT_DELETE)]
+    public virtual async Task<IActionResult> GeneratePreviewToken(int id)
+    {
+        // get product via id
+        var product = await _productService.GetProductByIdAsync(id);
+        if (product == null || product.Deleted)
+            return RedirectToAction("List");
+
+        // vendor should only be able to modify his own products
+        var currentVendor = await _workContext.GetCurrentVendorAsync();
+        if (currentVendor != null && product.VendorId != currentVendor.Id)
+            return RedirectToAction("List");
+
+        // token without -
+        var token = Guid.NewGuid().ToString("N");
+
+        // store token in generic attributes
+        await _genericAttributeService.SaveAttributeAsync(
+            product,
+            NopCatalogDefaults.ProductPreviewTokenAttribute,
+            token);
+
+        // notis
+        _notificationService.SuccessNotification("Preview token generated successfully.");
+
+        return RedirectToAction("Edit", new { id = product.Id });
+    }
+
     #endregion
 
     #region Filter level values
