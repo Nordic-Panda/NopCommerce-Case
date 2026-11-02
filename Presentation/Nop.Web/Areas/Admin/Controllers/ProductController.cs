@@ -100,6 +100,7 @@ public partial class ProductController : BaseAdminController
     protected readonly IWarehouseService _warehouseService;
     protected readonly IWebHelper _webHelper;
     protected readonly IWorkContext _workContext;
+    protected readonly IGenericAttributeService _genericAttributeService
     protected readonly CurrencySettings _currencySettings;
     protected readonly LocalizationSettings _localizationSettings;
     protected readonly MediaSettings _mediaSettings;
@@ -156,6 +157,7 @@ public partial class ProductController : BaseAdminController
         IWarehouseService warehouseService,
         IWebHelper webHelper,
         IWorkContext workContext,
+        IGenericAttributeService genericAttributeService,
         CurrencySettings currencySettings,
         LocalizationSettings localizationSettings,
         MediaSettings mediaSettings,
@@ -207,6 +209,7 @@ public partial class ProductController : BaseAdminController
         _warehouseService = warehouseService;
         _webHelper = webHelper;
         _workContext = workContext;
+        _genericAttributeService = genericAttributeService;
         _currencySettings = currencySettings;
         _localizationSettings = localizationSettings;
         _mediaSettings = mediaSettings;
@@ -971,7 +974,7 @@ public partial class ProductController : BaseAdminController
 
         var productsToUpdate = data.Where(d => d.NeedToUpdate(selected));
         var currentVendor = await _workContext.GetCurrentVendorAsync();
-        
+
         if (currentVendor != null)
             productsToUpdate = productsToUpdate.Where(p => p.Product.VendorId == currentVendor.Id);
 
@@ -3911,7 +3914,7 @@ public partial class ProductController : BaseAdminController
     {
         //try to get a product with the specified id
         var product = await _productService.GetProductByIdAsync(model.ProductId);
-        
+
         if (product == null)
             return RedirectToAction("List", "Product");
 
