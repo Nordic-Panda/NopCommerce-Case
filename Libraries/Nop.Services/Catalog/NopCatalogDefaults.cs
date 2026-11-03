@@ -41,6 +41,11 @@ public static partial class NopCatalogDefaults
     /// </summary>
     public static string ProductPreviewTokenAttribute => "ProductPreviewToken";
 
+    /// <summary>
+    /// Gets a name of generic attribute to store the product preview expiry
+    /// </summary>
+    public static string ProductPreviewExpiryAttribute => "ProductPreviewExpiry";
+
     #endregion
 
     #region Caching defaults

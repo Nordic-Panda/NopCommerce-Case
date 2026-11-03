@@ -1283,7 +1283,7 @@ public partial class ProductController : BaseAdminController
             // Save preview link expiry
             await _genericAttributeService.SaveAttributeAsync(
                 product,
-                "Product.PreviewLinkExpiryUtc",
+                NopCatalogDefaults.ProductPreviewExpiryAttribute,
                 model.PreviewLinkExpiryUtc);
 
             //remove associated products

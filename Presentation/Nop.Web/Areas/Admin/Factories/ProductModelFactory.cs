@@ -905,7 +905,7 @@ public partial class ProductModelFactory : IProductModelFactory
                 model.PreviewLinkExpiryUtc =
                     await _genericAttributeService.GetAttributeAsync<DateTime?>(
                         product,
-                        "Product.PreviewLinkExpiryUtc");
+                        NopCatalogDefaults.ProductPreviewExpiryAttribute);
             }
 
             var parentGroupedProduct = await _productService.GetProductByIdAsync(product.ParentGroupedProductId);
