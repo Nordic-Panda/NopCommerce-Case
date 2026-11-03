@@ -104,6 +104,7 @@ public partial class ProductController : BaseAdminController
     protected readonly IWorkContext _workContext;
     protected readonly IGenericAttributeService _genericAttributeService;
     protected readonly INopUrlHelper _nopUrlHelper;
+    protected readonly IDateTimeHelper _dateTimeHelper;
     protected readonly CurrencySettings _currencySettings;
     protected readonly LocalizationSettings _localizationSettings;
     protected readonly MediaSettings _mediaSettings;
@@ -166,7 +167,8 @@ public partial class ProductController : BaseAdminController
         LocalizationSettings localizationSettings,
         MediaSettings mediaSettings,
         TaxSettings taxSettings,
-        VendorSettings vendorSettings)
+        VendorSettings vendorSettings,
+        IDateTimeHelper dateTimeHelper)
     {
         _adminAreaSettings = adminAreaSettings;
         _customerSettings = customerSettings;
@@ -220,6 +222,7 @@ public partial class ProductController : BaseAdminController
         _mediaSettings = mediaSettings;
         _taxSettings = taxSettings;
         _vendorSettings = vendorSettings;
+        _dateTimeHelper = dateTimeHelper;
     }
 
     #endregion
@@ -1280,11 +1283,21 @@ public partial class ProductController : BaseAdminController
 
             await _productService.UpdateProductAsync(product);
 
+            // Convert the user's local time to UTC
+            var userTimeZone = await _dateTimeHelper.GetCurrentTimeZoneAsync();
+
+            var previewLinkExpiryUtc = model.PreviewLinkExpiryUtc.HasValue
+                ? TimeZoneInfo.ConvertTimeToUtc(
+                    DateTime.SpecifyKind(model.PreviewLinkExpiryUtc.Value, DateTimeKind.Unspecified),
+                    userTimeZone)
+                : (DateTime?)null;
+
+
             // Save preview link expiry
             await _genericAttributeService.SaveAttributeAsync(
                 product,
                 NopCatalogDefaults.ProductPreviewExpiryAttribute,
-                model.PreviewLinkExpiryUtc);
+                previewLinkExpiryUtc);
 
             //remove associated products
             if (previousProductType == ProductType.GroupedProduct && product.ProductType == ProductType.SimpleProduct)
@@ -1909,38 +1922,42 @@ public partial class ProductController : BaseAdminController
     [CheckPermission(StandardPermission.Catalog.PRODUCTS_CREATE_EDIT_DELETE)]
     public virtual async Task<IActionResult> GeneratePreviewToken(int id)
     {
-        // get product via id
+        // Get product via id
         var product = await _productService.GetProductByIdAsync(id);
         if (product == null || product.Deleted)
-            return RedirectToAction("List");
+            return Json(new { success = false, message = "Product not found." });
 
-        // vendor should only be able to modify his own products
+        // Vendor should only be able to modify his own products
         var currentVendor = await _workContext.GetCurrentVendorAsync();
         if (currentVendor != null && product.VendorId != currentVendor.Id)
-            return RedirectToAction("List");
+            return Json(new { success = false, message = "You are not allowed to modify this product." });
 
-        // token without -
+        // Generate token without "-"
         var token = Guid.NewGuid().ToString("N");
 
-        // store token in generic attributes
+        // Store token in GenericAttributes
         await _genericAttributeService.SaveAttributeAsync(
             product,
             NopCatalogDefaults.ProductPreviewTokenAttribute,
             token);
 
-        // notis
-        // _notificationService.SuccessNotification("Preview token generated successfully.");
-
+        // Generate preview URL
         var productUrl = await _nopUrlHelper.RouteGenericUrlAsync(product);
 
+        var absoluteProductUrl = productUrl.StartsWith('/')
+            ? $"{_webHelper.GetStoreLocation()}{productUrl.TrimStart('/')}"
+            : productUrl;
+
         var previewUrl = QueryHelpers.AddQueryString(
-            productUrl,
+            absoluteProductUrl,
             "previewToken",
             token);
 
-        _notificationService.SuccessNotification($"Preview URL: {previewUrl}");
-
-        return RedirectToAction("Edit", new { id = product.Id });
+        return Json(new
+        {
+            success = true,
+            previewUrl
+        });
     }
 
     #endregion

@@ -8,6 +8,7 @@ using Nop.Core.Domain.Shipping;
 using Nop.Core.Events;
 using Nop.Core.Http;
 using Nop.Services.Catalog;
+using Nop.Services.Common;
 using Nop.Services.Customers;
 using Nop.Services.Html;
 using Nop.Services.Localization;
@@ -55,6 +56,7 @@ public partial class ProductController : BasePublicController
     protected readonly IStoreMappingService _storeMappingService;
     protected readonly IWorkContext _workContext;
     protected readonly IWorkflowMessageService _workflowMessageService;
+    protected readonly IGenericAttributeService _genericAttributeService;
     protected readonly LocalizationSettings _localizationSettings;
     protected readonly ShoppingCartSettings _shoppingCartSettings;
     protected readonly ShippingSettings _shippingSettings;
@@ -90,7 +92,8 @@ public partial class ProductController : BasePublicController
         IWorkflowMessageService workflowMessageService,
         LocalizationSettings localizationSettings,
         ShoppingCartSettings shoppingCartSettings,
-        ShippingSettings shippingSettings)
+        ShippingSettings shippingSettings,
+        IGenericAttributeService genericAttributeService)
     {
         _captchaSettings = captchaSettings;
         _catalogSettings = catalogSettings;
@@ -120,21 +123,44 @@ public partial class ProductController : BasePublicController
         _localizationSettings = localizationSettings;
         _shoppingCartSettings = shoppingCartSettings;
         _shippingSettings = shippingSettings;
+        _genericAttributeService = genericAttributeService;
     }
 
     #endregion
-    
+
     #region Product details page
 
-    public virtual async Task<IActionResult> ProductDetails(int productId, int updatecartitemid = 0, int? customwishlistid = null)
+    public virtual async Task<IActionResult> ProductDetails(int productId, int updatecartitemid = 0, int? customwishlistid = null, string previewToken = null)
     {
         var product = await _productService.GetProductByIdAsync(productId);
         if (product == null || product.Deleted)
             return InvokeHttp404();
 
+        // Check whether the current user has a valid preview token (if the product is not published)
+        var isValidPreviewToken = false;
+
+        if (!product.Published && !string.IsNullOrEmpty(previewToken))
+        {
+            var savedToken = await _genericAttributeService.GetAttributeAsync<string>(
+                product,
+                NopCatalogDefaults.ProductPreviewTokenAttribute);
+
+            var expiry = await _genericAttributeService.GetAttributeAsync<DateTime?>(
+                product,
+                NopCatalogDefaults.ProductPreviewExpiryAttribute);
+
+            isValidPreviewToken =
+                !string.IsNullOrEmpty(savedToken) &&
+                savedToken == previewToken &&
+                (!expiry.HasValue || expiry.Value > DateTime.UtcNow);
+        }
+
+
         var notAvailable =
             //published?
-            (!product.Published && !_catalogSettings.AllowViewUnpublishedProductPage) ||
+            (!product.Published &&
+                 !_catalogSettings.AllowViewUnpublishedProductPage &&
+                 !isValidPreviewToken) ||
             //ACL (access control list) 
             !await _aclService.AuthorizeAsync(product) ||
             //Store mapping
@@ -309,7 +335,7 @@ public partial class ProductController : BasePublicController
     public virtual async Task<IActionResult> ProductReviewsAdd(int productId, ProductReviewsModel model, bool captchaValid)
     {
         //validate CAPTCHA
-        if (_captchaSettings.Enabled && _captchaSettings.ShowOnProductReviewPage && !captchaValid) 
+        if (_captchaSettings.Enabled && _captchaSettings.ShowOnProductReviewPage && !captchaValid)
             ModelState.AddModelError("", await _localizationService.GetResourceAsync("Common.WrongCaptchaMessage"));
 
         var product = await _productService.GetProductByIdAsync(productId);
@@ -318,8 +344,8 @@ public partial class ProductController : BasePublicController
         if (product == null || product.Deleted || !product.Published || !product.AllowCustomerReviews ||
             !await _productReviewService.CanAddReviewAsync(product.Id, _catalogSettings.ShowProductReviewsPerStore ? currentStore.Id : 0))
             return RedirectToRoute(NopRouteNames.General.HOMEPAGE);
-        
-        foreach (var error in await _productReviewService.ValidateProductReviewAvailabilityAsync(product)) 
+
+        foreach (var error in await _productReviewService.ValidateProductReviewAvailabilityAsync(product))
             ModelState.AddModelError(string.Empty, error);
 
         if (ModelState.IsValid)

@@ -9,3 +9,83 @@
         <span asp-validation-for="PreviewLinkExpiryUtc"></span>
     </div>
 </div>
+
+<div class="form-group row">
+    <div class="col-md-3">
+        <label>Preview URL</label>
+    </div>
+    <div class="col-md-9">
+        <div class="input-group">
+            <input type="text"
+                   id="preview-url"
+                   class="form-control"
+                   readonly />
+
+            <button type="button"
+                    id="copy-preview-url"
+                    class="btn btn-secondary">
+                Copy
+            </button>
+        </div>
+
+        <button type="button"
+                id="generate-preview-token"
+                class="btn btn-primary mt-2"
+                data-url="@Url.Action("GeneratePreviewToken", "Product", new { id = Model.Id })">
+            Generate Preview Link
+        </button>
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+<script>
+    $(function () {
+        $('#generate-preview-token').on('click', function () {
+            var button = $(this);
+            var url = button.data('url');
+            var token = $('input[name="__RequestVerificationToken"]').last().val();
+
+            button.prop('disabled', true);
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: url,
+                data: {
+                    __RequestVerificationToken: token
+                },
+                success: function (response) {
+                    if (response.success) {
+                        $('#preview-url').val(response.previewUrl);
+                    } else {
+                        alert(response.message || 'Failed to generate preview URL.');
+                    }
+                },
+                error: function () {
+                    alert('An error occurred while generating the preview URL.');
+                },
+                complete: function () {
+                    button.prop('disabled', false);
+                }
+            });
+        });
+
+        $('#copy-preview-url').on('click', function () {
+            var previewUrl = $('#preview-url').val();
+
+            if (!previewUrl) {
+                alert('Generate a preview URL first.');
+                return;
+            }
+
+            navigator.clipboard.writeText(previewUrl)
+                .then(function () {
+                    alert('Preview URL copied.');
+                })
+                .catch(function () {
+                    alert('Could not copy the URL.');
+                });
+        });
+    });
+</script>

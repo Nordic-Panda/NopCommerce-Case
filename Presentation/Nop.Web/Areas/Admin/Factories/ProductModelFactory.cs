@@ -902,10 +902,24 @@ public partial class ProductModelFactory : IProductModelFactory
                 model = product.ToModel<ProductModel>();
                 model.SeName = await _urlRecordService.GetSeNameAsync(product, 0, true, false);
 
-                model.PreviewLinkExpiryUtc =
+                var previewLinkExpiryUtc =
                     await _genericAttributeService.GetAttributeAsync<DateTime?>(
                         product,
                         NopCatalogDefaults.ProductPreviewExpiryAttribute);
+
+                if (previewLinkExpiryUtc.HasValue)
+                {
+                    var userTimeZone = await _dateTimeHelper.GetCurrentTimeZoneAsync();
+
+                    model.PreviewLinkExpiryUtc = _dateTimeHelper.ConvertToUserTime(
+                        DateTime.SpecifyKind(previewLinkExpiryUtc.Value, DateTimeKind.Utc),
+                        TimeZoneInfo.Utc,
+                        userTimeZone);
+                }
+                else
+                {
+                    model.PreviewLinkExpiryUtc = null;
+                }
             }
 
             var parentGroupedProduct = await _productService.GetProductByIdAsync(product.ParentGroupedProductId);
