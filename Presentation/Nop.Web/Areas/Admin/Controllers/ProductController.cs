@@ -1912,6 +1912,40 @@ public partial class ProductController : BaseAdminController
         return View(new AddCrossSellProductSearchModel());
     }
 
+    // Requirement
+    // Link
+    // Owner can create a link.
+    // Link is to product page.
+    // Product is unpublished.
+    // Link should contain a token.
+    // Without token in the link, visitor can not see preview.
+    // Link contains product id/name, with token.
+    // Link generates when admin clicks a button.
+    // Create/Edit both can generate link.
+
+    // Button
+    // In backoffice we need a button.
+    // We need to be able to copy the link.
+    // We need to be able to see the link generatede.
+
+    // Token
+    // Token is accesstoken.
+    // Token is Guid.
+    // Token creates when link generates from Admin.
+    // When button is clicked, Link controller fires, in side of it, we create Token.
+    // When url is visted, Controller fires, then we check token.
+    // Do we already have any service that handles this?
+
+    // Test case
+    // Link without token should not show preview.
+    // Link with wrong token should not show preview.
+    // Link expires should not show preview.
+    // Link with right token should show preview.
+    // Token should be generated as guid without dash.
+
+    // Use case
+
+
     // What needs to be done
     // 1. Admin needs to be able to genereate a preview link with a token. Admin controller
     // 2. Admin needs to be able to see the button for generate. // FE task needs to be done
