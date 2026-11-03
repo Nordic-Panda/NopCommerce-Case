@@ -901,12 +901,12 @@ public partial class ProductModelFactory : IProductModelFactory
             {
                 model = product.ToModel<ProductModel>();
                 model.SeName = await _urlRecordService.GetSeNameAsync(product, 0, true, false);
-            }
 
-            model.PreviewLinkExpiryUtc =
-                await _genericAttributeService.GetAttributeAsync<DateTime?>(
-                    product,
-                    "Product.PreviewLinkExpiryUtc");
+                model.PreviewLinkExpiryUtc =
+                    await _genericAttributeService.GetAttributeAsync<DateTime?>(
+                        product,
+                        "Product.PreviewLinkExpiryUtc");
+            }
 
             var parentGroupedProduct = await _productService.GetProductByIdAsync(product.ParentGroupedProductId);
             if (parentGroupedProduct != null)
