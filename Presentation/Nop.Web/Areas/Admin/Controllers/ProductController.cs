@@ -1280,6 +1280,12 @@ public partial class ProductController : BaseAdminController
 
             await _productService.UpdateProductAsync(product);
 
+            // Save preview link expiry
+            await _genericAttributeService.SaveAttributeAsync(
+                product,
+                "Product.PreviewLinkExpiryUtc",
+                model.PreviewLinkExpiryUtc);
+
             //remove associated products
             if (previousProductType == ProductType.GroupedProduct && product.ProductType == ProductType.SimpleProduct)
             {
