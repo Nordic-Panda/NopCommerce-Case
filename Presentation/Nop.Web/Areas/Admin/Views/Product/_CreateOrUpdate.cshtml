@@ -111,6 +111,14 @@
                     <nop-card asp-name="product-stock-quantity-history" asp-icon="fas fa-clock-rotate-left" asp-title="@T("Admin.Catalog.Products.StockQuantityHistory")" asp-hide-block-attribute-name="@hideStockQuantityHistoryBlockAttributeName" asp-hide="@hideStockQuantityHistoryBlock" asp-advanced="@(!Model.ProductEditorSettingsModel.StockQuantityHistory)">@await Html.PartialAsync("_CreateOrUpdate.StockQuantityHistory", Model)</nop-card>
                 }
 
+                <nop-card asp-name="product-preview-link"
+                          asp-icon="fas fa-link"
+                          asp-title="Preview Link"
+                          asp-hide-block-attribute-name="ProductPage.HidePreviewLinkBlock"
+                          asp-advanced="false">
+                    @await Html.PartialAsync("_CreateOrUpdate.PreviewLink", Model)
+                </nop-card>
+
                 @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.ProductDetailsBlock, additionalData = Model })
             </nop-cards>
         </div>

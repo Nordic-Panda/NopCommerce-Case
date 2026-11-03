@@ -85,6 +85,7 @@ public partial class ProductModelFactory : IProductModelFactory
     protected readonly IWarehouseService _warehouseService;
     protected readonly IWebHelper _webHelper;
     protected readonly IWorkContext _workContext;
+    protected readonly IGenericAttributeService _genericAttributeService;
     protected readonly MeasureSettings _measureSettings;
     protected readonly MediaSettings _mediaSettings;
     protected readonly NopHttpClient _nopHttpClient;
@@ -135,6 +136,7 @@ public partial class ProductModelFactory : IProductModelFactory
         IWarehouseService warehouseService,
         IWebHelper webHelper,
         IWorkContext workContext,
+        IGenericAttributeService genericAttributeService,
         MeasureSettings measureSettings,
         MediaSettings mediaSettings,
         NopHttpClient nopHttpClient,
@@ -181,6 +183,7 @@ public partial class ProductModelFactory : IProductModelFactory
         _warehouseService = warehouseService;
         _webHelper = webHelper;
         _workContext = workContext;
+        _genericAttributeService = genericAttributeService;
         _measureSettings = measureSettings;
         _mediaSettings = mediaSettings;
         _nopHttpClient = nopHttpClient;

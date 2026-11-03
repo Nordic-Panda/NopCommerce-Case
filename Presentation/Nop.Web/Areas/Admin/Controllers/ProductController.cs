@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using Nop.Core;
 using Nop.Core.Domain.ArtificialIntelligence;
@@ -47,6 +48,7 @@ using Nop.Web.Framework.Models.Translation;
 using Nop.Web.Framework.Mvc;
 using Nop.Web.Framework.Mvc.Filters;
 using Nop.Web.Framework.Mvc.ModelBinding;
+using Nop.Web.Framework.Mvc.Routing;
 using Nop.Web.Framework.Validators;
 
 namespace Nop.Web.Areas.Admin.Controllers;
@@ -101,6 +103,7 @@ public partial class ProductController : BaseAdminController
     protected readonly IWebHelper _webHelper;
     protected readonly IWorkContext _workContext;
     protected readonly IGenericAttributeService _genericAttributeService;
+    protected readonly INopUrlHelper _nopUrlHelper;
     protected readonly CurrencySettings _currencySettings;
     protected readonly LocalizationSettings _localizationSettings;
     protected readonly MediaSettings _mediaSettings;
@@ -158,6 +161,7 @@ public partial class ProductController : BaseAdminController
         IWebHelper webHelper,
         IWorkContext workContext,
         IGenericAttributeService genericAttributeService,
+        INopUrlHelper nopUrlHelper,
         CurrencySettings currencySettings,
         LocalizationSettings localizationSettings,
         MediaSettings mediaSettings,
@@ -210,6 +214,7 @@ public partial class ProductController : BaseAdminController
         _webHelper = webHelper;
         _workContext = workContext;
         _genericAttributeService = genericAttributeService;
+        _nopUrlHelper = nopUrlHelper;
         _currencySettings = currencySettings;
         _localizationSettings = localizationSettings;
         _mediaSettings = mediaSettings;
@@ -1888,6 +1893,12 @@ public partial class ProductController : BaseAdminController
         return View(new AddCrossSellProductSearchModel());
     }
 
+    // What needs to be done
+    // 1. Admin needs to be able to genereate a preview link with a token. Admin controller
+    // 2. Admin needs to be able to see the button for generate. // FE task needs to be done
+    // 3. Visitor needs to be able to visit the preview with the link. // Controller
+    // 4. Generate token, Token needs to be saved in the db.
+
     [HttpPost]
     [CheckPermission(StandardPermission.Catalog.PRODUCTS_CREATE_EDIT_DELETE)]
     public virtual async Task<IActionResult> GeneratePreviewToken(int id)
@@ -1912,7 +1923,16 @@ public partial class ProductController : BaseAdminController
             token);
 
         // notis
-        _notificationService.SuccessNotification("Preview token generated successfully.");
+        // _notificationService.SuccessNotification("Preview token generated successfully.");
+
+        var productUrl = await _nopUrlHelper.RouteGenericUrlAsync(product);
+
+        var previewUrl = QueryHelpers.AddQueryString(
+            productUrl,
+            "previewToken",
+            token);
+
+        _notificationService.SuccessNotification($"Preview URL: {previewUrl}");
 
         return RedirectToAction("Edit", new { id = product.Id });
     }

@@ -509,6 +509,11 @@ public partial record ProductModel : BaseNopEntityModel,
 
     public ProductAttributeCombinationSearchModel ProductAttributeCombinationSearchModel { get; set; }
 
+    // preview link
+    [NopResourceDisplayName("Admin.Catalog.Products.Fields.PreviewLinkExpiry")]
+    [UIHint("DateTimeNullable")]
+    public DateTime? PreviewLinkExpiryUtc { get; set; }
+
     #endregion
 }
 
